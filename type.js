@@ -1,16 +1,18 @@
-// Type table management: single add + bulk import + edit/delete/search
+// Type table management: single add + bulk import (deferred) + edit/delete/search
 document.addEventListener("DOMContentLoaded", () => {
   const els = {
     container: document.getElementById("typeContainer"),
     section: document.querySelector(".type-section"),
     table: document.getElementById("typeTable"),
     tbody: document.querySelector("#typeTable tbody"),
+
     addBtn: document.getElementById("typeAddBtn"),
     deleteBtn: document.getElementById("typeDeleteBtn"),
     exitDeleteBtn: document.getElementById("typeExitDelete"),
     selectAll: document.getElementById("typeSelectAll"),
     searchInput: document.getElementById("typeSearchInput"),
     queryBtn: document.getElementById("typeQueryBtn"),
+
     modal: document.getElementById("typeModal"),
     fModel: document.getElementById("f_model"),
     fLoad: document.getElementById("f_load"),
@@ -20,9 +22,11 @@ document.addEventListener("DOMContentLoaded", () => {
     fKz: document.getElementById("f_kz"),
     saveBtn: document.getElementById("typeSave"),
     cancelBtn: document.getElementById("typeCancel"),
+
     bulkUpload: document.getElementById("typeBulkUpload"),
     bulkInput: document.getElementById("typeBulkInput"),
     bulkStatus: document.getElementById("typeBulkStatus"),
+
     editModal: document.getElementById("typeEditModal"),
     editModel: document.getElementById("edit_model"),
     editLoad: document.getElementById("edit_load"),
@@ -33,15 +37,12 @@ document.addEventListener("DOMContentLoaded", () => {
     editSave: document.getElementById("typeEditSave"),
     editCancel: document.getElementById("typeEditCancel"),
   };
-
   if (!els.table || !els.tbody) return;
 
-  const state = {
-    deleteMode: false,
-    currentQuery: "",
-    editingId: null,
-    editingRow: null,
-  };
+  // 批量上传的暂存：仅在点击【保存】时入库/入表
+  const TYPE_STATE = { pendingBulk: [], pendingFile: "" };
+
+  const state = { deleteMode: false, currentQuery: "", editingId: null, editingRow: null };
 
   const api = {
     async list(keyword = "") {
@@ -78,30 +79,28 @@ document.addEventListener("DOMContentLoaded", () => {
     },
   };
 
-  function toNumber(value) {
-    if (value == null || value === "") return null;
-    if (typeof value === "number") return Number.isFinite(value) ? value : null;
-    const cleaned = String(value).replace(/[^0-9+\-eE.]/g, "").trim();
-    if (cleaned === "") return null;
-    const num = Number(cleaned);
-    return Number.isFinite(num) ? num : null;
+  // ========= helpers =========
+  function toNumber(v) {
+    if (v == null || v === "") return null;
+    if (typeof v === "number") return Number.isFinite(v) ? v : null;
+    const cleaned = String(v).replace(/[^0-9+\-eE.]/g, "").trim();
+    if (!cleaned) return null;
+    const n = Number(cleaned);
+    return Number.isFinite(n) ? n : null;
   }
 
   function formatNumericCell(td) {
-    const text = td.textContent.trim();
-    if (text === "") return;
-    const num = Number(text.replace(/,/g, ""));
+    const t = td.textContent.trim();
+    if (!t) return;
+    const num = Number(t.replace(/,/g, ""));
     if (!Number.isFinite(num)) return;
-    if (Math.abs(num) >= 1e6 || Math.abs(num) <= 1e-6) {
-      td.textContent = num.toExponential(4);
-    } else {
-      td.textContent = num.toString();
-    }
+    if (Math.abs(num) >= 1e6 || Math.abs(num) <= 1e-6) td.textContent = num.toExponential(4);
+    else td.textContent = num.toString();
   }
 
   function normalizeTable() {
     els.tbody.querySelectorAll("tr").forEach((tr) => {
-      for (let i = 2; i <= 6; i += 1) {
+      for (let i = 2; i <= 6; i++) {
         const cell = tr.children[i];
         if (cell) formatNumericCell(cell);
       }
@@ -110,7 +109,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function buildRow(item) {
     const tr = document.createElement("tr");
-    tr.dataset.typeId = item.id;
+    if (item.id != null) tr.dataset.typeId = item.id;
 
     const firstTd = document.createElement("td");
     const checkbox = document.createElement("input");
@@ -121,9 +120,9 @@ document.addEventListener("DOMContentLoaded", () => {
     tr.appendChild(firstTd);
 
     const fields = [item.model, item.load, item.damp, item.kx, item.ky, item.kz];
-    fields.forEach((value) => {
+    fields.forEach((val) => {
       const td = document.createElement("td");
-      td.textContent = value == null ? "" : value;
+      td.textContent = val == null ? "" : val;
       tr.appendChild(td);
     });
 
@@ -133,15 +132,12 @@ document.addEventListener("DOMContentLoaded", () => {
     editBtn.textContent = "修改";
     actionTd.appendChild(editBtn);
     tr.appendChild(actionTd);
-
     return tr;
   }
 
   function render(list) {
     els.tbody.innerHTML = "";
-    list.forEach((item) => {
-      els.tbody.appendChild(buildRow(item));
-    });
+    list.forEach((it) => els.tbody.appendChild(buildRow(it)));
     normalizeTable();
     applyDeleteMode();
   }
@@ -151,16 +147,16 @@ document.addEventListener("DOMContentLoaded", () => {
     try {
       const list = await api.list(keyword);
       render(list);
-    } catch (err) {
-      console.error(err);
-      alert(err.message || "加载类型失败");
+    } catch (e) {
+      console.error(e);
+      alert(e.message || "加载类型失败");
     }
   }
 
   function visibleCheckboxes() {
-    return Array.from(
-      els.tbody.querySelectorAll(".type-row-select"),
-    ).filter((cb) => cb.closest("tr")?.style.display !== "none");
+    return Array.from(els.tbody.querySelectorAll(".type-row-select")).filter(
+      (cb) => cb.closest("tr")?.style.display !== "none",
+    );
   }
 
   function updateExitVisibility() {
@@ -200,184 +196,106 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function resetBulkUpload() {
-    if (els.bulkUpload) els.bulkUpload.classList.remove("dragover");
+    els.bulkUpload?.classList.remove("dragover");
     if (els.bulkInput) els.bulkInput.value = "";
     if (els.bulkStatus) {
       els.bulkStatus.textContent = "支持 .xlsx / .csv 文件";
       els.bulkStatus.classList.remove("error", "success");
     }
+    TYPE_STATE.pendingBulk = [];
+    TYPE_STATE.pendingFile = "";
   }
 
-  function setBulkStatus(message, type) {
-    if (!els.bulkStatus) return;
-    els.bulkStatus.textContent = message;
-    els.bulkStatus.classList.remove("error", "success");
-    if (type) els.bulkStatus.classList.add(type);
-  }
-
-  function stripHeader(rows) {
-    if (!rows.length) return rows;
-    const first = rows[0].map((cell) => String(cell || "").trim());
-    const keywords = ["型号", "载荷", "阻尼", "动刚度"];
-    if (first.some((text) => keywords.some((kw) => text.includes(kw)))) {
-      return rows.slice(1);
-    }
-    const numericCount = first.slice(1).reduce(
-      (count, cell) => (Number.isFinite(Number(cell)) ? count + 1 : count),
-      0,
-    );
-    if (numericCount === 0 && rows.length > 1) return rows.slice(1);
-    return rows;
-  }
-
-  function parseRecords(rawRows) {
-    return stripHeader(
-      rawRows
-        .map((row) => (Array.isArray(row) ? row : [row]))
-        .map((row) => row.map((cell) => String(cell ?? "").trim()))
-        .filter((row) => row.some((cell) => cell !== "")),
-    )
-      .map((row) => ({
-        model: row[0] || "",
-        load: row[1] || "",
-        damp: row[2] || "",
-        kx: row[3] || "",
-        ky: row[4] || "",
-        kz: row[5] || "",
-      }))
-      .filter((item) => item.model !== "");
-  }
-
-  async function importRecords(records) {
-    if (!records.length) {
-      setBulkStatus("未检测到有效数据，请检查文件内容", "error");
-      return;
-    }
-    setBulkStatus("正在导入，请稍候...", null);
-    let success = 0;
-    for (const record of records) {
-      const payload = {
-        model: record.model,
-        load: toNumber(record.load),
-        damp: toNumber(record.damp),
-        kx: toNumber(record.kx),
-        ky: toNumber(record.ky),
-        kz: toNumber(record.kz),
-      };
-      try {
-        await api.create(payload);
-        success += 1;
-      } catch (err) {
-        console.error("批量导入失败", err);
-      }
-    }
-    if (success) {
-      setBulkStatus(`成功导入 ${success} 条记录`, "success");
-      await loadTypes(state.currentQuery);
-    } else {
-      setBulkStatus("未成功导入任何记录", "error");
-    }
-  }
-
-  function processFile(file) {
-    if (!file) return;
-    const ext = (file.name.split(".").pop() || "").toLowerCase();
-    if (!/(csv|xlsx)$/.test(ext)) {
-      setBulkStatus(`不支持的文件类型：${file.name}`, "error");
-      if (els.bulkInput) els.bulkInput.value = "";
-      return;
-    }
-    setBulkStatus("正在解析文件...", null);
-
-    const finish = (rows) => {
-      const records = parseRecords(rows);
-      importRecords(records).finally(() => {
-        if (els.bulkInput) els.bulkInput.value = "";
-      });
-    };
-
-    if (ext === "csv") {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        const text = String(event.target?.result || "");
-        const rows = text
-          .split(/\r?\n/)
-          .map((line) => line.split(",").map((cell) => cell.trim()));
-        finish(rows);
-      };
-      reader.onerror = () => setBulkStatus("读取 CSV 文件失败", "error");
-      reader.readAsText(file, "utf-8");
-      return;
-    }
-
-    if (typeof XLSX === "undefined") {
-      alert("缺少 XLSX 库，无法解析 Excel 文件");
-      resetBulkUpload();
-      return;
-    }
-
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      try {
-        const data = new Uint8Array(event.target?.result || []);
-        const workbook = XLSX.read(data, { type: "array" });
-        const sheet = workbook.Sheets[workbook.SheetNames[0]];
-        const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
-        finish(rows);
-      } catch (err) {
-        console.error("解析 Excel 失败", err);
-        setBulkStatus("解析 Excel 文件失败，请检查文件内容", "error");
-      }
-    };
-    reader.onerror = () => setBulkStatus("读取 Excel 文件失败", "error");
-    reader.readAsArrayBuffer(file);
-  }
-
-  // -----------------------------------------------------------------------
-  // Event bindings
-  // -----------------------------------------------------------------------
+  // ========= UI: open/close modal =========
   els.addBtn?.addEventListener("click", () => {
-    [els.fModel, els.fLoad, els.fDamp, els.fKx, els.fKy, els.fKz].forEach((input) => {
-      if (input) input.value = "";
-    });
+    [els.fModel, els.fLoad, els.fDamp, els.fKx, els.fKy, els.fKz].forEach((i) => i && (i.value = ""));
     resetBulkUpload();
-    if (els.modal) els.modal.style.display = "flex";
+    els.modal && (els.modal.style.display = "flex");
   });
 
   els.cancelBtn?.addEventListener("click", () => {
-    if (els.modal) els.modal.style.display = "none";
+    els.modal && (els.modal.style.display = "none");
     resetBulkUpload();
   });
 
-  els.saveBtn?.addEventListener("click", async () => {
-    const model = els.fModel?.value.trim() || "";
-    if (!model) {
-      alert("请输入减振器型号");
-      return;
+  document.addEventListener("click", (e) => {
+    if (e.target === els.modal) {
+      els.modal.style.display = "none";
+      resetBulkUpload();
     }
-    const payload = {
-      model,
-      load: toNumber(els.fLoad?.value),
-      damp: toNumber(els.fDamp?.value),
-      kx: toNumber(els.fKx?.value),
-      ky: toNumber(els.fKy?.value),
-      kz: toNumber(els.fKz?.value),
-    };
-    try {
-      await api.create(payload);
-      await loadTypes(state.currentQuery);
-      [els.fModel, els.fLoad, els.fDamp, els.fKx, els.fKy, els.fKz].forEach((input) => {
-        if (input) input.value = "";
-      });
-      alert("添加成功，可以继续录入或点击取消关闭弹窗");
-    } catch (err) {
-      console.error(err);
-      alert(err.message || "新增失败");
+    if (e.target === els.editModal) {
+      els.editModal.style.display = "none";
+      state.editingId = null;
+      state.editingRow = null;
     }
   });
 
+  // ========= query & delete =========
+  els.queryBtn?.addEventListener("click", () => loadTypes(els.searchInput?.value.trim() || ""));
+  els.searchInput?.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") loadTypes(els.searchInput.value.trim());
+  });
+
+  els.deleteBtn?.addEventListener("click", async () => {
+    if (!state.deleteMode) {
+      state.deleteMode = true;
+      els.deleteBtn?.classList.add("delete-active");
+      applyDeleteMode();
+      return;
+    }
+    const checked = visibleCheckboxes().filter((cb) => cb.checked);
+    if (!checked.length) return alert("请选择要删除的记录");
+    const ids = checked
+      .map((cb) => Number(cb.closest("tr")?.dataset.typeId || ""))
+      .filter((id) => Number.isInteger(id));
+    if (!ids.length) return alert("所选记录缺少 ID，无法删除");
+    const detailLines = checked.map((cb) => {
+      const cells = cb.closest("tr")?.children || [];
+      return `型号：${cells[1]?.textContent || ""}  载荷：${cells[2]?.textContent || ""}  阻尼：${cells[3]?.textContent || ""}`;
+    });
+    if (!confirm(`确认删除以下 ${ids.length} 条类型？\n${detailLines.join("\n")}`)) return;
+    try {
+      await api.bulkDelete(ids);
+      await loadTypes(state.currentQuery);
+    } catch (e) {
+      console.error(e);
+      alert(e.message || "删除失败");
+    }
+    exitDeleteMode();
+  });
+  els.exitDeleteBtn?.addEventListener("click", exitDeleteMode);
+  els.selectAll?.addEventListener("change", () => {
+    const checked = !!els.selectAll.checked;
+    visibleCheckboxes().forEach((cb) => (cb.checked = checked));
+    updateExitVisibility();
+  });
+  document.addEventListener("change", (e) => {
+    if (!e.target.classList?.contains("type-row-select")) return;
+    const visible = visibleCheckboxes();
+    if (els.selectAll) els.selectAll.checked = visible.length > 0 && visible.every((cb) => cb.checked);
+    updateExitVisibility();
+  });
+
+  // ========= edit =========
+  els.table?.addEventListener("click", (e) => {
+    const editBtn = e.target.closest(".btn-edit");
+    if (!editBtn) return;
+    const row = editBtn.closest("tr");
+    if (!row) return;
+    state.editingRow = row;
+    state.editingId = Number(row.dataset.typeId || "");
+    const c = row.children;
+    els.editModel && (els.editModel.value = c[1]?.textContent.trim() || "");
+    els.editLoad && (els.editLoad.value = c[2]?.textContent.trim() || "");
+    els.editDamp && (els.editDamp.value = c[3]?.textContent.trim() || "");
+    els.editKx && (els.editKx.value = c[4]?.textContent.trim() || "");
+    els.editKy && (els.editKy.value = c[5]?.textContent.trim() || "");
+    els.editKz && (els.editKz.value = c[6]?.textContent.trim() || "");
+    els.editModal && (els.editModal.style.display = "flex");
+  });
+
   els.editCancel?.addEventListener("click", () => {
-    if (els.editModal) els.editModal.style.display = "none";
+    els.editModal && (els.editModal.style.display = "none");
     state.editingId = null;
     state.editingRow = null;
   });
@@ -392,161 +310,177 @@ document.addEventListener("DOMContentLoaded", () => {
       ky: toNumber(els.editKy?.value),
       kz: toNumber(els.editKz?.value),
     };
-    if (!payload.model) {
-      alert("请输入减振器型号");
-      return;
-    }
+    if (!payload.model) return alert("请输入减振器型号");
     try {
       await api.update(state.editingId, payload);
       await loadTypes(state.currentQuery);
-      if (els.editModal) els.editModal.style.display = "none";
+      els.editModal && (els.editModal.style.display = "none");
       state.editingId = null;
       state.editingRow = null;
-    } catch (err) {
-      console.error(err);
-      alert(err.message || "保存失败");
+    } catch (e) {
+      console.error(e);
+      alert(e.message || "保存失败");
     }
   });
 
-  els.table?.addEventListener("click", (event) => {
-    const editBtn = event.target.closest(".btn-edit");
-    if (!editBtn) return;
-    const row = editBtn.closest("tr");
-    if (!row) return;
-    state.editingRow = row;
-    state.editingId = Number(row.dataset.typeId || "");
-    const cells = row.children;
-    if (els.editModel) els.editModel.value = cells[1]?.textContent.trim() || "";
-    if (els.editLoad) els.editLoad.value = cells[2]?.textContent.trim() || "";
-    if (els.editDamp) els.editDamp.value = cells[3]?.textContent.trim() || "";
-    if (els.editKx) els.editKx.value = cells[4]?.textContent.trim() || "";
-    if (els.editKy) els.editKy.value = cells[5]?.textContent.trim() || "";
-    if (els.editKz) els.editKz.value = cells[6]?.textContent.trim() || "";
-    if (els.editModal) els.editModal.style.display = "flex";
-  });
+  // ========= bulk upload: 解析→暂存；保存时再入库 =========
+  {
+    const box = els.bulkUpload, input = els.bulkInput, stat = els.bulkStatus;
+    if (box && input && stat) {
+      let busy = false;
 
-  els.queryBtn?.addEventListener("click", () => {
-    const keyword = els.searchInput?.value.trim() || "";
-    loadTypes(keyword);
-  });
+      const setStatus = (msg, kind) => {
+        stat.className = "type-bulk-status" + (kind ? " " + kind : "");
+        stat.textContent = msg || "";
+      };
+      const looksLikeHeader = (cells) => {
+        if (!cells || cells.length < 3) return false;
+        const line = cells.map((s) => String(s).trim());
+        const KW = ["型号", "载荷", "阻尼", "动刚度X", "动刚度Y", "动刚度Z"];
+        let hit = 0;
+        for (const k of KW) if (line.some((x) => x.includes(k))) hit++;
+        return hit >= 3;
+      };
+      const parseCSVLine = (l) => {
+        const out = [];
+        let cur = "", inQ = false;
+        for (let i = 0; i < l.length; i++) {
+          const ch = l[i];
+          if (ch === '"') { inQ = !inQ; continue; }
+          if (ch === "," && !inQ) { out.push(cur.trim()); cur = ""; continue; }
+          cur += ch;
+        }
+        out.push(cur.trim());
+        return out;
+      };
 
-  els.searchInput?.addEventListener("keypress", (event) => {
-    if (event.key === "Enter") {
-      const keyword = els.searchInput.value.trim();
-      loadTypes(keyword);
-    }
-  });
-
-  els.deleteBtn?.addEventListener("click", async () => {
-    if (!state.deleteMode) {
-      state.deleteMode = true;
-      els.deleteBtn?.classList.add("delete-active");
-      applyDeleteMode();
-      return;
-    }
-    const checked = visibleCheckboxes().filter((cb) => cb.checked);
-    if (!checked.length) {
-      alert("请选择要删除的记录");
-      return;
-    }
-    const ids = checked
-      .map((cb) => Number(cb.closest("tr")?.dataset.typeId || ""))
-      .filter((id) => Number.isInteger(id));
-    if (!ids.length) {
-      alert("所选记录缺少 ID，无法删除");
-      return;
-    }
-    const detailLines = checked.map((cb) => {
-      const cells = cb.closest("tr")?.children || [];
-      return `型号：${cells[1]?.textContent || ""}  载荷：${cells[2]?.textContent || ""}  阻尼：${cells[3]?.textContent || ""}`;
-    });
-    if (!confirm(`确认删除以下 ${ids.length} 条类型？\n${detailLines.join("\n")}`)) return;
-    try {
-      await api.bulkDelete(ids);
-      await loadTypes(state.currentQuery);
-    } catch (err) {
-      console.error(err);
-      alert(err.message || "删除失败");
-    }
-    exitDeleteMode();
-  });
-
-  els.exitDeleteBtn?.addEventListener("click", exitDeleteMode);
-
-  els.selectAll?.addEventListener("change", () => {
-    const checked = !!els.selectAll.checked;
-    visibleCheckboxes().forEach((cb) => {
-      cb.checked = checked;
-    });
-    updateExitVisibility();
-  });
-
-  document.addEventListener("change", (event) => {
-    if (!event.target.classList?.contains("type-row-select")) return;
-    const visible = visibleCheckboxes();
-    if (els.selectAll) {
-      els.selectAll.checked = visible.length > 0 && visible.every((cb) => cb.checked);
-    }
-    updateExitVisibility();
-  });
-
-  if (els.bulkUpload && els.bulkInput) {
-    els.bulkUpload.addEventListener("click", () => els.bulkInput.click());
-    els.bulkUpload.addEventListener("keydown", (event) => {
-      if (event.key === "Enter" || event.key === " ") {
-        event.preventDefault();
-        els.bulkInput.click();
-      }
-    });
-    els.bulkUpload.addEventListener("dragover", (event) => {
-      event.preventDefault();
-      els.bulkUpload.classList.add("dragover");
-    });
-    els.bulkUpload.addEventListener("dragleave", () => {
-      els.bulkUpload.classList.remove("dragover");
-    });
-    els.bulkUpload.addEventListener("drop", (event) => {
-      event.preventDefault();
-      els.bulkUpload.classList.remove("dragover");
-      const files = event.dataTransfer?.files;
-      if (!files || !files.length) {
-        resetBulkUpload();
-        return;
-      }
-      if (els.bulkInput && typeof DataTransfer !== "undefined") {
+      async function handleFile(file) {
+        if (!file || busy) return;
+        busy = true;
+        setStatus("解析中…");
         try {
-          const dt = new DataTransfer();
-          dt.items.add(files[0]);
-          els.bulkInput.files = dt.files;
-        } catch (err) {
-          console.warn("DataTransfer not supported", err);
-          els.bulkInput.value = "";
+          const ext = (file.name.split(".").pop() || "").toLowerCase();
+          if (!["csv", "xlsx"].includes(ext)) {
+            setStatus("仅支持 .xlsx / .csv", "error");
+            return;
+          }
+          let rows;
+          if (ext === "csv") {
+            const txt = await file.text();
+            const lines = txt.replace(/\uFEFF/g, "").split(/\r?\n/).filter((l) => l.trim().length);
+            const arr = lines.map(parseCSVLine);
+            rows = looksLikeHeader(arr[0]) ? arr.slice(1) : arr;
+          } else {
+            const buf = await file.arrayBuffer();
+            const wb = XLSX.read(new Uint8Array(buf), { type: "array" });
+            const ws = wb.Sheets[wb.SheetNames[0]];
+            const arr = XLSX.utils.sheet_to_json(ws, { header: 1, raw: true });
+            rows = looksLikeHeader(arr[0]) ? arr.slice(1) : arr.slice();
+          }
+          // 暂存有效记录（不落表）
+          TYPE_STATE.pendingBulk = rows
+            .map((r) => (r || []).slice(0, 6))
+            .filter((r) => r[0] && String(r[0]).trim() !== "");
+          TYPE_STATE.pendingFile = file.name;
+          setStatus(
+            `已解析 ${TYPE_STATE.pendingBulk.length} 条（未保存）`,
+            TYPE_STATE.pendingBulk.length ? "success" : "error",
+          );
+        } catch (e) {
+          console.error(e);
+          setStatus("解析失败", "error");
+        } finally {
+          busy = false;
+          input.value = ""; // 允许选择同一文件再次触发
         }
       }
-      processFile(files[0]);
-    });
-    els.bulkInput.addEventListener("change", (event) => {
-      const file = event.target.files?.[0];
-      if (!file) {
-        resetBulkUpload();
-        return;
-      }
-      setBulkStatus(`已选择：${file.name}`, "success");
-      processFile(file);
-    });
+
+      // 点击/键盘选择
+      box.addEventListener("click", () => { input.value = ""; input.click(); });
+      box.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); input.value = ""; input.click(); }
+      });
+      // 拖拽
+      ["dragenter", "dragover"].forEach((ev) =>
+        box.addEventListener(ev, (e) => { e.preventDefault(); box.classList.add("dragover"); }),
+      );
+      ["dragleave", "drop"].forEach((ev) =>
+        box.addEventListener(ev, (e) => { e.preventDefault(); box.classList.remove("dragover"); }),
+      );
+      box.addEventListener("drop", (e) => handleFile(e.dataTransfer.files && e.dataTransfer.files[0]));
+      input.addEventListener("change", (e) => handleFile(e.target.files?.[0]));
+    }
   }
 
-  document.addEventListener("click", (event) => {
-    if (event.target === els.modal) {
-      if (els.modal) els.modal.style.display = "none";
-      resetBulkUpload();
-    }
-    if (event.target === els.editModal) {
-      if (els.editModal) els.editModal.style.display = "none";
-      state.editingId = null;
-      state.editingRow = null;
-    }
-  });
+  // ========= 保存：手动录入 + 批量暂存，一次性提交 =========
+// ---- 保存：先本地展示，再尝试提交后端（失败也保留前端展示） ----
+els.saveBtn?.addEventListener("click", async () => {
+  // 1) 收集手动区
+  const model = els.fModel?.value.trim() || "";
+  const manualFilled = [els.fModel, els.fLoad, els.fDamp, els.fKx, els.fKy, els.fKz]
+    .some(i => i && String(i.value).trim() !== "");
+  const manualRecord = (manualFilled && model)
+    ? [model, els.fLoad?.value, els.fDamp?.value, els.fKx?.value, els.fKy?.value, els.fKz?.value]
+    : null;
 
+  // 2) 收集批量暂存
+  const bulk = Array.isArray(TYPE_STATE.pendingBulk) ? TYPE_STATE.pendingBulk.slice() : [];
+
+  if (!manualRecord && bulk.length === 0) {
+    alert("没有可保存的数据");
+    return;
+  }
+
+  // 3) 统一打包为记录数组（便于前端渲染与后端提交共用）
+  const records = [];
+  if (manualRecord) records.push(manualRecord);
+  for (const r of bulk) records.push(r);
+
+  // 4) 先本地渲染到表（乐观更新）
+  for (const rec of records) {
+    const rowObj = {
+      id: null,                        // 前端临时行无 id
+      model: String(rec[0] ?? "").trim(),
+      load:  rec[1] ?? "",
+      damp:  rec[2] ?? "",
+      kx:    rec[3] ?? "",
+      ky:    rec[4] ?? "",
+      kz:    rec[5] ?? "",
+    };
+    els.tbody.appendChild(buildRow(rowObj));
+  }
+  // 规范化数值显示 & 删除模式适配
+  normalizeTable();
+  applyDeleteMode();
+
+  // 5) 尝试提交后端（失败也不撤回前端行）
+  try {
+    for (const rec of records) {
+      const payload = {
+        model: String(rec[0]).trim(),
+        load:  toNumber(rec[1]),
+        damp:  toNumber(rec[2]),
+        kx:    toNumber(rec[3]),
+        ky:    toNumber(rec[4]),
+        kz:    toNumber(rec[5]),
+      };
+      // 可改成批量接口；此处逐条以兼容你现有 API
+      try { await api.create(payload); } catch (e) { console.warn("后端保存失败(已在前端展示):", e); }
+    }
+    // 不再调用 loadTypes() 去依赖后端刷新，避免“没跑后端导致清空”
+  } finally {
+    // 6) 清理输入与暂存，并给出状态
+    [els.fModel, els.fLoad, els.fDamp, els.fKx, els.fKy, els.fKz].forEach(i => i && (i.value = ""));
+    // 注意：TYPE_STATE 是局部常量，不在 window 上，直接清它
+    TYPE_STATE.pendingBulk = [];
+    TYPE_STATE.pendingFile = "";
+    if (els.bulkStatus) els.bulkStatus.textContent = "已保存（已显示到前端）";
+    // 关闭弹窗更直观
+    if (els.modal) els.modal.style.display = "none";
+  }
+});
+
+
+  // ========= 初次载入 =========
   loadTypes("");
 });

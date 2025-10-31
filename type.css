@@ -330,3 +330,307 @@
     gap: 14px;
   }
 }
+
+/* 让手动录入网格每列更宽以容纳更长输入 */
+#typeModal .type-manual-grid {
+  grid-template-columns: repeat(2, minmax(360px, 1fr));
+  gap: 16px 28px; /* 行间距略缩，整体更紧凑 */
+}
+
+/* 统一按钮区与上传区间距 */
+#typeModal .modal-buttons {
+  margin-top: 20px;
+}
+#typeModal .type-field { position: relative; }
+/* 输入框更短 更规整 */
+#typeModal .type-field input {
+  width: 100%;
+  max-width: 180px;   /* 现在短了 */
+  box-sizing: border-box;
+  padding-right: 72px; /* 给右侧提示留空间 */
+}
+
+/* 两列更紧凑 */
+#typeModal .type-manual-grid {
+  grid-template-columns: repeat(2, minmax(200px, 1fr)); /* 再缩一档 */
+  column-gap: 14px;
+  row-gap: 12px;
+}
+
+/* 右侧提示固定到右边 */
+#typeModal .type-field {
+  position: relative;
+}
+#typeModal .type-field .suffix {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 12px;
+  padding: 2px 6px;
+  background: rgba(255,255,255,0.08);
+  pointer-events: none;
+  border-radius: 6px;
+}
+
+#typeModal .type-manual-grid { grid-template-columns: repeat(2, minmax(220px, 1fr)); }
+/* 让父容器不裁剪绝对定位元素 */
+#typeModal .type-field {
+  position: relative;
+  overflow: visible;
+}
+
+/* 给输入框足够的右内边距，避免文本与后缀重叠 */
+#typeModal .type-field input {
+  width: 100%;
+  max-width: 180px;          /* 你要的短宽度，按需调 */
+  box-sizing: border-box;
+  padding-right: 140px;      /* 关键：为“支持科学计数法”预留空间 */
+}
+
+/* 后缀标签不截断，宽度自适应 */
+#typeModal .type-field .suffix {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  white-space: nowrap;       /* 不换行不折断 */
+  max-width: none;           /* 不限宽 */
+  font-size: 12px;
+  padding: 2px 8px;
+  background: rgba(255,255,255,0.08);
+  color: rgba(210,224,255,0.85);
+  border-radius: 6px;
+  pointer-events: none;
+}
+/* === 表单行改为网格：label 独占一行，input 与后缀并排 === */
+#typeModal .type-field{
+  display: grid !important;
+  grid-template-columns: auto max-content;
+  grid-template-areas:
+    "label label"
+    "input suffix";
+  column-gap: 8px;
+  row-gap: 8px;
+  align-items: center;
+  overflow: visible;            /* 防止裁剪 */
+}
+#typeModal .type-field label{ grid-area: label; margin: 0; }
+
+/* 输入框：不再用右内边距“撑位” */
+#typeModal .type-field input{
+  grid-area: input;
+  width: 100%;
+  max-width: 180px;             /* 你要的短尺寸，按需改 160~220 */
+  box-sizing: border-box;
+  padding-right: 12px !important;  /* 取消之前的 72/140px 撑位 */
+}
+
+/* 后缀：直接占一列，禁止换行，不绝对定位 */
+#typeModal .type-field .suffix{
+  grid-area: suffix;
+  position: static !important;  /* 覆盖之前 absolute */
+  white-space: nowrap;
+  display: inline-block;
+  padding: 2px 8px;
+  font-size: 12px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.08);
+  color: rgba(210,224,255,0.95);
+}
+
+/* 手动输入两列更紧凑，避免横向溢出 */
+#typeModal .type-manual-grid{
+  grid-template-columns: repeat(2, minmax(150px, 1fr)) !important; /* 原 220px */
+  column-gap: 10px !important; /* 原 14px */
+  row-gap: 10px !important; /* 更紧凑 */
+}
+/* == Type 批量上传：玻璃拟态 + 悬停缩放 + 拖拽高亮 == */
+#typeModal .type-bulk-upload {
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  border: 2px dashed rgba(255,255,255,0.28);
+  border-radius: 12px;
+  padding: 22px 18px 18px;
+  text-align: center;
+  cursor: pointer;
+  background: rgba(255,255,255,0.06);
+  backdrop-filter: blur(8px);
+  transition: transform .25s ease, box-shadow .25s ease, border-color .25s ease, background .25s ease;
+  box-shadow: 0 10px 24px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,0.06);
+}
+#typeModal .type-bulk-upload:hover {
+  transform: translateY(-2px) scale(1.01);
+  border-color: rgba(140, 188, 255, .75);
+  background: rgba(0, 120, 255, 0.10);
+  box-shadow: 0 14px 30px rgba(0,120,255,.35);
+}
+/* 拖拽进入高亮态 */
+#typeModal .type-bulk-upload.dragover {
+  border-color: rgba(0,150,255,.85);
+  background: rgba(24, 60, 110, .55);
+  box-shadow: 0 18px 36px rgba(0,150,255,.42), 0 0 0 3px rgba(0,120,255,.18) inset;
+}
+
+/* 顶部小徽标 */
+#typeModal .type-bulk-upload .badge {
+  position: absolute;
+  left: 12px; top: 10px;
+  font-size: 12px;
+  color: rgba(210,224,255,.85);
+  background: rgba(255,255,255,.08);
+  padding: 2px 8px;
+  border-radius: 999px;
+  letter-spacing: .3px;
+}
+
+/* 中心图标 + 轻微呼吸动画 */
+#typeModal .type-bulk-upload .drop-icon {
+  width: 44px; height: 44px; margin: 6px auto 10px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, rgba(160,200,255,.9), rgba(80,140,255,.65));
+  animation: iconPulse 1.8s ease-in-out infinite;
+  box-shadow: 0 8px 18px rgba(0,120,255,.35);
+}
+@keyframes iconPulse {
+  0%,100% { transform: translateY(0) scale(1); filter: brightness(1); }
+  50% { transform: translateY(-2px) scale(1.04); filter: brightness(1.1); }
+}
+
+/* 底部示例表 */
+#typeModal .type-bulk-upload .sample-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+#typeModal .type-bulk-upload .sample-table th,
+#typeModal .type-bulk-upload .sample-table td {
+  border: 1px solid rgba(255,255,255,0.12);
+  padding: 6px;
+  color: #a8c4ff;
+  font-size: 13px;
+}
+
+/* 上传状态条 */
+#typeModal .type-bulk-status {
+  margin-top: 10px;
+  font-size: 13px;
+  color: rgba(204,224,255,.85);
+  text-align: center;
+  min-height: 18px;
+  transition: color .2s ease;
+}
+#typeModal .type-bulk-status.error   { color: rgba(255,172,180,.92); }
+#typeModal .type-bulk-status.success { color: rgba(180,244,255,.92); }
+
+/* 成功打勾动画 */
+#typeModal .upload-check {
+  width: 22px; height: 22px; margin: 6px auto 0; border-radius: 50%;
+  background: linear-gradient(135deg, #48d2ff, #1ea0ff);
+  position: relative; animation: pop .28s ease-out;
+  box-shadow: 0 8px 18px rgba(0,140,255,.36);
+}
+#typeModal .upload-check::after {
+  content: ""; position: absolute; left: 6px; top: 5px; width: 8px; height: 12px;
+  border-right: 2px solid white; border-bottom: 2px solid white; transform: rotate(45deg);
+}
+@keyframes pop { from { transform: scale(.8); opacity: .2; } to { transform: scale(1); opacity: 1; } }
+
+/* 与表格控件的风格对齐的按钮与动画参数（来源于 data-section） */
+#typeModal .type-bulk-pane .type-pane-title { margin-bottom: 6px; }
+/* 左侧 Type 表：超出滚动 */
+.type-section{
+  max-height: calc(100vh - 140px);
+  overflow: hidden;
+}
+.type-container{
+  max-height: calc(100vh - 200px);
+  overflow: auto;
+}
+
+/* “添加类型”弹窗体内滚动 */
+#typeModal .modal-content{
+  max-height: 82vh;
+  overflow: auto;
+}
+
+/* 批量上传框内示例表大时滚动 */
+#typeModal .type-bulk-upload{
+  overflow: auto;
+  max-height: 60vh;
+}
+
+/* 弹窗内下拉/候选列表滚动（若有） */
+#typeModal .ps-list,
+#typeModal .type-manual-grid{
+  overflow: auto;
+}
+/* 表头固定：科技玻璃风 */
+#dataTable thead th,
+#typeTable thead th {
+  position: sticky;
+  top: 0;
+  z-index: 5;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid rgba(120,168,255,0.35);
+}
+
+/* 表格主体滚动区域（如果之前没设统一滚动容器） */
+.table-container,
+.type-container {
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(140,188,255,0.65) rgba(255,255,255,0.10);
+}
+#typeModal .type-field .suffix{
+  grid-area: suffix;
+  justify-self: end;
+  min-width: 150px;                           /* 固定后缀列宽，保证对齐 */
+  white-space: nowrap;
+  padding: 2px 8px;
+  font-size: 12px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.08);
+  color: rgba(210,224,255,0.95);
+}
+/* 无后缀的行也占位 96px，确保所有输入框看起来一样长（Edge/Chrome 支持 :has） */
+#typeModal .type-field:not(:has(.suffix))::after{
+  content: "";
+  grid-area: suffix;
+  width: 0px;
+  height: 1px;              /* 占位但不改变行高 */
+}
+#typeModal .type-field .suffix{
+  grid-area: suffix;
+  justify-self: end;
+  min-width: 96px;                           /* 固定后缀列宽，保证对齐 */
+  white-space: nowrap;
+  padding: 2px 8px;
+  font-size: 12px;
+  border-radius: 6px;
+  background: rgba(255,255,255,0.08);
+  color: rgba(210,224,255,0.95);
+}
+/* === Type �༭���� === */
+#typeEditModal .type-modal-body {
+  display: block;
+  padding: 12px 0;
+}
+
+#typeEditModal .type-pane {
+  margin: 0 auto;
+  max-width: 520px;
+}
+
+#typeEditModal .type-manual-grid {
+  grid-template-columns: repeat(2, minmax(220px, 1fr));
+  column-gap: 24px;
+  row-gap: 16px;
+}
+
+@media (max-width: 720px) {
+  #typeEditModal .type-manual-grid {
+    grid-template-columns: 1fr;
+  }
+}

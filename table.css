@@ -393,3 +393,91 @@
 
 /* 容器布局保持居中 */
 .input-box { width: 260px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }
+/* 右侧数据表：超出出现滚动条，不溢出页面 */
+.data-section{
+  max-height: calc(100vh - 140px); /* 顶栏80px + 间距约60px */
+  overflow: hidden;                 /* 自身不滚，内部滚 */
+}
+.table-container{
+  max-height: calc(100vh - 200px);  /* 扣掉控制栏等高度 */
+  overflow: auto;
+}
+
+/* 预览与编辑弹窗的表格内容滚动 */
+#dataEditModal .modal-content{
+  max-height: 82vh;
+  overflow: auto;
+}
+#previewModal .modal-content{
+  max-height: 82vh;
+  overflow: auto;
+}
+
+/* 顶部用户下拉避免溢出 */
+.dropdown-content{
+  max-height: 60vh;
+  overflow: auto;
+}
+.table-container {
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+}
+
+.type-container {
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+}
+/* === 上传弹窗：允许下拉面板越界显示 === */
+#uploadModelModal .modal-content{
+  overflow: visible !important;
+  position: relative;
+}
+
+#uploadModelModal .upload-layout{
+  overflow: visible !important;
+  position: relative;   /* 作为下拉的定位参考 */
+}
+
+#uploadModelModal .upload-left,
+#uploadModelModal .upload-right{
+  overflow: visible !important; /* 不裁剪下拉面板 */
+  position: relative;
+}
+
+/* 右侧区降低层级，避免盖住左侧下拉 */
+#uploadModelModal .upload-right{
+  z-index: 1;
+}
+
+/* 默认 */
+#uploadModelModal .ps {
+  position: relative;
+  z-index: 1;
+}
+
+/* 下拉展开时置顶 */
+#uploadModelModal .ps.open {
+  z-index: 999;
+}
+
+/* 下拉面板：绝对定位到按钮下方，拉高层级与高度 */
+#uploadModelModal .ps-list{
+  position: absolute;
+  left: 0; right: 0; top: calc(100% + 6px);
+  max-height: 72vh;                 /* 需要更高就调到 80/90vh */
+  overflow-y: auto;
+  z-index: 1000;                    /* 高于右侧内容 */
+  border-radius: 10px;
+  backdrop-filter: blur(8px);
+  background: rgba(12,24,48,0.75);
+  box-shadow: 0 12px 28px rgba(0,0,0,.45), 0 0 0 1px rgba(136,198,255,.35) inset;
+}
+
+/* 若用打开态类名，确保显示 */
+#uploadModelModal .ps.open .ps-list{
+  display: block !important;
+}
+/* 兜底：整个上传弹窗根节点不裁剪 */
+#uploadModelModal{
+  overflow: visible !important;
+}

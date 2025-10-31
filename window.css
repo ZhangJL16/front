@@ -75,3 +75,11 @@
   font-size: 15px;
   color: #b0c4de;
 }
+/* 全站模态：内容溢出时内部滚动，遮罩不滚 */
+.modal{
+  overflow: hidden;
+}
+.modal-content{
+  max-height: 82vh;
+  overflow: auto;
+}

@@ -140,3 +140,58 @@ header { z-index: 5000; }
 
 /* 可选：若仍被裁剪，去掉或放宽 overflow */
 .table-container { overflow: visible; }  /* 如需保留圆角裁剪，就不要改 */
+/* === 全局滚轮 · 科技液态玻璃风 === */
+:root{
+  --sg-track: rgba(255,255,255,0.10);
+  --sg-thumb: rgba(140,188,255,0.65);
+  --sg-thumb-hover: rgba(160,208,255,0.85);
+}
+
+/* Firefox */
+*{
+  scrollbar-width: thin;
+  scrollbar-color: var(--sg-thumb) transparent;
+}
+
+/* WebKit */
+*::-webkit-scrollbar{
+  width: 10px; height: 10px;
+}
+*::-webkit-scrollbar-track{
+  background: var(--sg-track);
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,0.06);
+  backdrop-filter: blur(6px);
+}
+*::-webkit-scrollbar-thumb{
+  background: linear-gradient(135deg, rgba(88,148,255,0.55), var(--sg-thumb));
+  border-radius: 10px;
+  box-shadow: 0 2px 8px rgba(0,120,255,0.35), inset 0 1px 0 rgba(255,255,255,0.25);
+}
+*::-webkit-scrollbar-thumb:hover{
+  background: linear-gradient(135deg, rgba(108,168,255,0.75), var(--sg-thumb-hover));
+}
+
+/* 允许页面滚动，避免整体裁剪 */
+html, body{
+  height: 100%;
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.ps-list::-webkit-scrollbar {
+  width: 6px;
+}
+.ps-list::-webkit-scrollbar-thumb {
+  background: rgba(120,168,255,0.4);
+  border-radius: 3px;
+}
+.ps-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(120,168,255,0.7);
+}
+
+/* 让自定义型号选择面板高度拉满窗口 */
+.ps-list {
+  max-height: 70vh !important;  /* 占屏幕 70% 的高度，根据需要改 80vh/90vh */
+  overflow-y: auto !important;
+  border-radius: 10px;
+}
