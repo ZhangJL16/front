@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FFGZ 预测数据库系统</title>
+  <link rel="stylesheet" href="header.css">
+  <link rel="stylesheet" href="window.css">
+  <link rel="stylesheet" href="table.css">
+  <link rel="stylesheet" href="type.css">
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="script.js" defer></script>
+  <script src="table.js" defer></script>
+  <script src="type.js" defer></script>
+</head>
+<body>
+  <header class="app-header">
+    <div class="header-title">FFGZ预测数据库系统</div>
+  </header>
+
+  <main class="app-main">
+    <section class="data-section">
+      <div class="table-header">
+        <div class="table-controls">
+          <button id="uploadBtn">上传文件</button>
+          <input type="text" id="searchInput" placeholder="输入型号查询">
+          <button id="queryBtn">查询</button>
+          <button id="deleteBtn">删除</button>
+          <button id="exitDelete" class="icon-close" title="退出删除模式" aria-label="退出删除模式">×</button>
+        </div>
+      </div>
+      <div class="table-container" id="tableContainer">
+        <table id="dataTable">
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="selectAll"></th>
+              <th>上减振器型号</th>
+              <th>下减振器型号</th>
+              <th>频率范围(Hz)</th>
+              <th>最大激励(dB)</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Data rows are injected via table.js -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="type-section">
+      <div class="type-header">
+        <div class="type-controls">
+          <button id="typeAddBtn">添加</button>
+          <input type="text" id="typeSearchInput" placeholder="按型号查询">
+          <button id="typeQueryBtn">查询</button>
+          <button id="typeDeleteBtn">删除</button>
+          <button id="typeExitDelete" class="type-icon-close" title="退出删除模式" aria-label="退出删除模式">×</button>
+        </div>
+      </div>
+      <div class="type-container" id="typeContainer">
+        <table id="typeTable">
+          <thead>
+            <tr>
+              <th><input type="checkbox" id="typeSelectAll"></th>
+              <th>减振器型号</th>
+              <th>载荷</th>
+              <th>阻尼</th>
+              <th>动刚度X</th>
+              <th>动刚度Y</th>
+              <th>动刚度Z</th>
+              <th>操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Data rows are injected via type.js -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <div id="uploadModelModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="uploadModalTitle">
+    <div class="modal-content upload-layout">
+      <div class="upload-left">
+        <h2 id="uploadModalTitle">请输入上下减振器型号</h2>
+        <div class="input-box">
+          <div class="ps" id="ps-upper">
+            <button type="button" class="ps-toggle" data-placeholder="选择上减振器型号">选择上减振器型号</button>
+            <div class="ps-list"></div>
+            <select id="upperModel"></select>
+          </div>
+          <div class="ps" id="ps-lower">
+            <button type="button" class="ps-toggle" data-placeholder="选择下减振器型号">选择下减振器型号</button>
+            <div class="ps-list"></div>
+            <select id="lowerModel"></select>
+          </div>
+        </div>
+        <div class="modal-buttons">
+          <button id="checkModel">确认型号</button>
+          <button id="cancelModel">取消</button>
+        </div>
+      </div>
+      <div class="upload-right" id="uploadRight">
+        <p class="upload-tip">请先输入并确认上/下减振器型号</p>
+        <div class="upload-box hidden" id="uploadBox">
+          <p class="upload-title">点击此处上传数据文件 (.xlsx / .csv)</p>
+          <table class="sample-table">
+            <thead>
+              <tr>
+                <th>频率(Hz)</th>
+                <th>激励(dB)</th>
+                <th>响应(dB)</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr><td>10</td><td>80.1</td><td>81.2</td></tr>
+              <tr><td>20</td><td>82.8</td><td>83.5</td></tr>
+              <tr><td>30</td><td>83.4</td><td>84.0</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <input type="file" id="fileInput" accept=".csv,.xlsx" hidden>
+
+  <div id="previewModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="previewModalTitle">
+    <div class="modal-content modal-large">
+      <h2 id="previewModalTitle">数据预览</h2>
+      <div id="previewMeta" class="preview-meta"></div>
+      <div id="previewChartPlaceholder" class="chart-placeholder">
+        曲线预留区（后续接入 ECharts）
+      </div>
+      <div class="modal-buttons">
+        <button id="previewClose">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="dataEditModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="dataEditModalTitle">
+    <div class="modal-content modal-large">
+      <h2 id="dataEditModalTitle">编辑数据</h2>
+      <div class="preview-meta">
+        上减振器：（<span id="editUpper"></span>） 下减振器：（<span id="editLower"></span>）
+      </div>
+      <table id="editDataTable">
+        <thead>
+          <tr>
+            <th>频率(Hz)</th>
+            <th>激励(dB)</th>
+            <th>响应(dB)</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+      <div class="modal-buttons">
+        <button id="editSave">保存</button>
+        <button id="editCancel">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="typeModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="typeModalTitle">
+    <div class="modal-content">
+      <h2 id="typeModalTitle">添加类型</h2>
+      <div class="input-box form-cols">
+        <div class="col-left">
+          <div class="form-row"><label for="f_model">减振器型号</label><input id="f_model" type="text"></div>
+          <div class="form-row"><label for="f_load">载荷</label><input id="f_load" type="number" step="0.01"></div>
+          <div class="form-row"><label for="f_damp">阻尼</label><input id="f_damp" type="number" step="0.001"></div>
+        </div>
+        <div class="col-right">
+          <div class="form-row"><label for="f_kx">动刚度X</label><input id="f_kx" type="text"></div>
+          <div class="form-row"><label for="f_ky">动刚度Y</label><input id="f_ky" type="text"></div>
+          <div class="form-row"><label for="f_kz">动刚度Z</label><input id="f_kz" type="text"></div>
+        </div>
+      </div>
+      <div class="modal-buttons">
+        <button id="typeSave">保存</button>
+        <button id="typeCancel">取消</button>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

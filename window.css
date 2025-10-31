@@ -1,0 +1,77 @@
+/* 模态框背景 */
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 2000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  justify-content: center;
+  align-items: center;
+}
+
+/* 模态框内容 */
+.modal-content {
+  background: #101d35;
+  color: #ffffff;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.4);
+  width: 320px;
+  text-align: center;
+  animation: fadeIn 0.3s ease;
+}
+
+.modal-content h2 {
+  margin-bottom: 20px;
+  font-family: "Microsoft YaHei";
+  font-size: 20px;
+}
+
+.modal-content input {
+  width: 90%;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  margin-bottom: 20px;
+  font-size: 14px;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: space-between;
+}
+
+.modal-buttons button {
+  width: 45%;
+  padding: 8px;
+  border: none;
+  border-radius: 6px;
+  background: linear-gradient(135deg,#0078ff,#0056c9);
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.modal-buttons button:hover {
+  background: linear-gradient(135deg,#3399ff,#0066cc);
+}
+
+@keyframes fadeIn {
+  from {opacity: 0; transform: scale(0.9);}
+  to {opacity: 1; transform: scale(1);}
+}
+
+
+#logoutModal .modal-content h2 {
+  margin-bottom: 10px;
+}
+#logoutModal .modal-content p {
+  margin-bottom: 20px;
+  font-size: 15px;
+  color: #b0c4de;
+}

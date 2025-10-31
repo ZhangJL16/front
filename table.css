@@ -1,0 +1,395 @@
+/* ===== 数据表格整体 ===== */
+.data-section {
+  position: absolute;
+  top: 120px;
+  right: 40px;
+  width: 45%;
+  color: white;
+  font-family: "Microsoft YaHei", sans-serif;
+}
+
+/* 控制栏 */
+.table-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 12px 18px;
+  background: linear-gradient(135deg, rgba(22, 32, 62, 0.68), rgba(9, 18, 36, 0.58));
+  border: 1px solid rgba(120, 168, 255, 0.28);
+  border-radius: 14px;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+.table-controls input[type="text"] {
+  display: inline-block; /* 初始不显示查询框 */
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(130, 170, 255, 0.32);
+  color: #eaf2ff;
+  padding: 8px 14px;
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+.table-controls input[type="text"]:focus {
+  background: rgba(46, 74, 128, 0.38);
+  border-color: rgba(78, 170, 255, 0.8);
+  box-shadow: 0 0 12px rgba(76, 163, 255, 0.45), inset 0 0 0 1px rgba(0, 0, 0, 0.25);
+  outline: none;
+}
+.table-controls input[type="text"]::placeholder {
+  color: rgba(214, 226, 255, 0.6);
+}
+.table-controls button {
+  background: linear-gradient(135deg, rgba(66, 182, 255, 0.9), rgba(38, 118, 255, 0.72));
+  border: 1px solid rgba(136, 198, 255, 0.6);
+  color: #f3f7ff;
+  padding: 8px 18px;
+  border-radius: 10px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 128, 255, 0.35);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease, background 0.3s ease;
+}
+.table-controls button:hover {
+  transform: translateY(-2px);
+  border-color: rgba(176, 220, 255, 0.85);
+  box-shadow: 0 12px 30px rgba(0, 140, 255, 0.45);
+}
+.table-controls button:active {
+  transform: translateY(0);
+  box-shadow: 0 6px 18px rgba(0, 102, 220, 0.4);
+}
+.table-controls button.delete-active {
+  background: linear-gradient(135deg, rgba(255, 102, 134, 0.88), rgba(176, 26, 68, 0.78));
+  border-color: rgba(255, 142, 164, 0.75);
+  box-shadow: 0 10px 26px rgba(255, 80, 120, 0.45);
+}
+.table-controls button.delete-active:hover {
+  border-color: rgba(255, 182, 198, 0.9);
+  box-shadow: 0 14px 32px rgba(255, 80, 120, 0.6);
+}
+
+/* 表格容器 */
+.table-container {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  box-shadow: 0 0 12px rgba(0, 0, 0, 0.4);
+  overflow: hidden;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+.table-container:hover {
+  transform: scale(1.01);
+  box-shadow: 0 0 16px rgba(0, 120, 255, 0.4);
+}
+
+/* 表格 */
+#dataTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+#dataTable thead {
+  background: rgba(0, 80, 160, 0.8);
+}
+#dataTable th,
+#dataTable td {
+  padding: 10px 12px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* 行悬停效果 */
+#dataTable tbody tr:hover {
+  background: rgba(0, 120, 255, 0.2);
+  cursor: default;
+  transition: background 0.2s ease;
+}
+
+/* 复选框默认隐藏 */
+#dataTable input[type="checkbox"] {
+  transform: scale(1.2);
+  cursor: pointer;
+  display: none;
+}
+.show-checkbox #dataTable input[type="checkbox"] {
+  display: inline-block;
+}
+/* 表头全选框默认隐藏，删除模式显示 */
+#selectAll { display: none; }
+.show-checkbox #selectAll { display: inline-block; }
+/* 上传弹窗布局 */
+#uploadModelModal .modal-content.upload-layout {
+  display: flex;
+  width: 720px;
+  background: #101d35;
+  color: #fff;
+  padding: 25px 30px;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.4);
+  animation: fadeIn 0.3s ease;
+}
+
+/* 左侧输入区 */
+.upload-left {
+  flex: 1;
+  border-right: 1px solid rgba(255,255,255,0.1);
+  padding-right: 20px;
+}
+.upload-left h2 {
+  font-size: 20px;
+  margin-bottom: 12px;
+}
+.input-box {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.input-box input {
+  background: rgba(255,255,255,0.1);
+  border: none;
+  color: white;
+  padding: 8px;
+  border-radius: 6px;
+  text-align: center;
+}
+/* 按钮整体紧凑一点 */
+.modal-buttons {
+  display: flex;
+  gap: 12px;
+  margin-top: 4px;   /* 有需要可调 */
+  justify-content: center;
+}
+/* 输入框区域与按钮的距离 */
+.upload-left .input-box {
+  margin-bottom: 20px;  /* 可调 16-28 */
+}
+.modal-buttons button {
+  width: 48%;
+  padding: 8px;
+  border: none;
+  border-radius: 6px;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+}
+#checkModel {
+  background: linear-gradient(135deg,#0078ff,#0056c9);
+}
+#checkModel:hover {
+  background: linear-gradient(135deg,#3399ff,#0066cc);
+}
+#cancelModel {
+  background: linear-gradient(135deg,#ff4b4b,#b60000);
+}
+#cancelModel:hover {
+  background: linear-gradient(135deg,#ff6b6b,#d40000);
+}
+
+/* 右侧上传区 */
+.upload-right {
+  flex: 1.2;
+  padding-left: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+.upload-tip {
+  color: #c8d8ff;
+  font-size: 14px;
+  text-align: center;
+}
+.upload-box {
+  width: 90%;
+  border: 2px dashed rgba(255,255,255,0.3);
+  border-radius: 10px;
+  padding: 20px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+.upload-box:hover {
+  background: rgba(0, 120, 255, 0.15);
+  border-color: #3399ff;
+  transform: scale(1.02);
+}
+.upload-title {
+  color: #a8c4ff;
+  margin-bottom: 10px;
+  font-size: 15px;
+}
+.sample-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.sample-table th, .sample-table td {
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 6px;
+  color: #a8c4ff;
+  font-size: 13px;
+}
+/* 退出删除模式按钮，默认隐藏，仅删除模式下可见 */
+.icon-close {
+  display: none;
+  width: 32px; height: 32px;
+  line-height: 32px; text-align: center;
+  border-radius: 50%;
+  border: none; cursor: pointer;
+  background: rgba(255,255,255,0.15);
+  color: #fff; font-size: 18px;
+  transition: background .2s ease, transform .2s ease;
+}
+.icon-close:hover { background: rgba(255,80,80,0.8); transform: translateY(-1px); }
+
+/* 删除模式时展示；若有选中则继续隐藏（由JS切换类名） */
+.show-exit .icon-close { display: inline-flex; align-items: center; justify-content: center; }
+
+.action-btn {
+  background: rgba(0,120,255,0.18);
+  border: 1px solid rgba(0,120,255,0.45);
+  color: #fff;
+  padding: 4px 10px;
+  margin: 0 4px;
+  border-radius: 6px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: .2s;
+}
+.action-btn:hover {
+  background: rgba(0,120,255,0.35);
+  border-color: #3399ff;
+}
+.btn-edit {
+  background: rgba(255,165,0,0.18);
+  border-color: rgba(255,165,0,0.5);
+}
+.btn-edit:hover {
+  background: rgba(255,165,0,0.35);
+  border-color: #ffb84d;
+}
+
+/* 曲线占位 */
+.chart-placeholder {
+  height: 360px;
+  border: 1px dashed rgba(255,255,255,0.25);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #a8c4ff;
+}
+/* 上传弹窗中的下拉选择样式，统一风格 */
+.input-box select {
+  background: rgba(255,255,255,0.1);
+  border: none;
+  color: #fff;
+  padding: 8px;
+  border-radius: 6px;
+  text-align: center;
+  appearance: none; /* 去原生箭头，必要时可自定义 */
+}
+.input-box select:invalid { color: #9bb4e7; } /* 未选择时的占位色 */
+/* 选择框容器，居中对齐 */
+.input-box {
+  width: 260px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* 下拉框统一样式 */
+.input-box select {
+  width: 100%;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #e6ecf5;
+  font-size: 15px;
+  border-radius: 10px;
+  outline: none;
+  cursor: pointer;
+  font-family: "Microsoft YaHei", sans-serif;
+
+  /* 玻璃效果 */
+  backdrop-filter: blur(6px);
+
+  /* 自定义箭头 */
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg fill='%23c8d2e3' height='20' width='20' viewBox='0 0 20 20'%3E%3Cpath d='M5.5 7.5l4.5 5 4.5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+}
+
+/* 悬浮与聚焦效果 */
+.input-box select:hover {
+  border-color: rgba(0, 150, 255, 0.7);
+  box-shadow: 0 0 10px rgba(0, 150, 255, 0.3);
+}
+
+.input-box select:focus {
+  border-color: #4ca3ff;
+  box-shadow: 0 0 12px rgba(76, 163, 255, 0.6);
+}
+
+/* 禁用提示颜色 */
+.input-box select option[disabled] {
+  color: #9aa5b8;
+}
+/* 自定义下拉：容器 */
+.ps { position: relative; width: 260px; }
+.ps select { display: none; }  /* 隐藏原生下拉 */
+
+/* 触发按钮（与上方下拉同风格） */
+.ps-toggle {
+  width: 100%;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(120,160,255,0.35);
+  color: #e8f1ff;
+  font: 15px "Microsoft YaHei", sans-serif;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: .2s;
+}
+.ps-toggle:hover { border-color: rgba(0,150,255,.75); box-shadow: 0 0 12px rgba(0,120,255,.4); }
+.ps-toggle:after {
+  content: "";
+  position: absolute; right: 12px; top: 50%; width: 18px; height: 18px; transform: translateY(-50%);
+  background: url("data:image/svg+xml,%3Csvg fill='%23bcd2ff' viewBox='0 0 16 16'%3E%3Cpath d='M4 6l4 4 4-4'/%3E%3C/svg%3E") no-repeat center/18px 18px;
+  pointer-events: none;
+}
+
+/* 下拉面板 */
+.ps-list {
+  position: absolute; left: 0; top: calc(100% + 8px);
+  width: 100%; max-height: 240px; overflow: auto; z-index: 9990;
+  background: rgba(15,25,45,.98);
+  border: 1px solid rgba(120,160,255,.35);
+  border-radius: 10px;
+  box-shadow: 0 10px 24px rgba(0,0,0,.45), 0 0 0 3px rgba(0,120,255,.15);
+  display: none;
+}
+
+/* 面板项 */
+.ps-item {
+  padding: 10px 14px;
+  color: #e6ecf5;
+  font: 14px "Microsoft YaHei", sans-serif;
+  cursor: pointer;
+  transition: background .15s, color .15s;
+}
+.ps-item:hover { background: rgba(0,120,255,.28); }
+.ps-item.active { background: rgba(0,120,255,.42); }
+
+/* 打开状态 */
+.ps.open .ps-list { display: block; }
+
+/* 容器布局保持居中 */
+.input-box { width: 260px; margin: 0 auto; display: flex; flex-direction: column; gap: 14px; }

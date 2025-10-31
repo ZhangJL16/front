@@ -1,0 +1,332 @@
+/* ===== 左侧 Type 表区域（在日志上方） ===== */
+.type-section {
+  position: absolute;
+  left: 40px;
+  top: 120px;           /* 顶栏下 */
+  width: 45%;           /* 与右侧一致 */
+  color: #fff;
+  font-family: "Microsoft YaHei", sans-serif;
+  z-index: 2;
+}
+.type-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  padding: 12px 18px;
+  background: linear-gradient(135deg, rgba(22, 32, 62, 0.68), rgba(9, 18, 36, 0.58));
+  border: 1px solid rgba(120, 168, 255, 0.28);
+  border-radius: 14px;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+.type-controls input[type="text"]{
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(130, 170, 255, 0.32);
+  color: #eaf2ff;
+  padding: 8px 14px;
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05);
+  transition: border-color .2s ease, box-shadow .2s ease, background .2s ease;
+}
+.type-controls input[type="text"]:focus{
+  background: rgba(46, 74, 128, 0.38);
+  border-color: rgba(78, 170, 255, 0.8);
+  box-shadow: 0 0 12px rgba(76, 163, 255, 0.45), inset 0 0 0 1px rgba(0, 0, 0, 0.25);
+  outline: none;
+}
+.type-controls input[type="text"]::placeholder{
+  color: rgba(214, 226, 255, 0.6);
+}
+.type-controls button{
+  background: linear-gradient(135deg, rgba(66, 182, 255, 0.9), rgba(38, 118, 255, 0.72));
+  border: 1px solid rgba(136, 198, 255, 0.6);
+  color: #f3f7ff;
+  padding: 8px 18px;
+  border-radius: 10px;
+  font-weight: 500;
+  letter-spacing: 0.3px;
+  cursor: pointer;
+  box-shadow: 0 8px 24px rgba(0, 128, 255, 0.35);
+  transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease, background .3s ease;
+}
+.type-controls button:hover{
+  transform: translateY(-2px);
+  border-color: rgba(176, 220, 255, 0.85);
+  box-shadow: 0 12px 30px rgba(0, 140, 255, 0.45);
+}
+.type-controls button:active{
+  transform: translateY(0);
+  box-shadow: 0 6px 18px rgba(0, 102, 220, 0.4);
+}
+.type-controls button.delete-active{
+  background: linear-gradient(135deg, rgba(255, 102, 134, 0.88), rgba(176, 26, 68, 0.78));
+  border-color: rgba(255, 142, 164, 0.75);
+  box-shadow: 0 10px 26px rgba(255, 80, 120, 0.45);
+}
+.type-controls button.delete-active:hover{
+  border-color: rgba(255, 182, 198, 0.9);
+  box-shadow: 0 14px 32px rgba(255, 80, 120, 0.6);
+}
+
+.type-container{
+  background: rgba(255,255,255,0.05);
+  border-radius: 10px;
+  box-shadow: 0 0 12px rgba(0,0,0,.4);
+  overflow: hidden;
+  transition: transform .3s, box-shadow .3s;
+}
+.type-container:hover{ transform: scale(1.01); box-shadow: 0 0 16px rgba(0,120,255,.4); }
+
+#typeTable{ width: 100%; border-collapse: collapse; font-size:16px; }
+#typeTable thead{ background: rgba(0,80,160,.8); }
+#typeTable th,#typeTable td{
+  padding:10px 12px; text-align:center;
+  border-bottom:1px solid rgba(255,255,255,.1);
+}
+#typeTable tbody tr:hover{ background: rgba(0,120,255,.2); transition: background .2s; cursor: default; }
+
+/* 复选框默认隐藏，删除模式显示 */
+#typeTable input[type="checkbox"]{ transform: scale(1.2); cursor: pointer; display:none; }
+.type-show-checkbox #typeTable input[type="checkbox"]{ display:inline-block; }
+
+/* 表头全选框默认隐藏，删除模式显示 */
+#typeSelectAll{ display:none; }
+.type-show-checkbox #typeSelectAll{ display:inline-block; }
+
+/* 退出删除模式按钮（左侧 type） */
+.type-icon-close{
+  display:none; width:32px; height:32px; line-height:32px; text-align:center;
+  border-radius:50%; border:none; cursor:pointer;
+  background: rgba(255,255,255,0.15); color:#fff; font-size:18px;
+  transition: background .2s, transform .2s;
+}
+.type-icon-close:hover{ background: rgba(255,80,80,0.8); transform: translateY(-1px); }
+.type-show-exit .type-icon-close{ display:inline-flex; align-items:center; justify-content:center; }
+/* 表单标签 + 输入 */
+.form-rows { display: flex; flex-direction: column; gap: 10px; }
+.form-row { display: flex; align-items: center; gap: 10px; }
+.form-row label {
+  width: 90px; text-align: right; color: #a8c4ff; font-size: 14px;
+}
+.form-row input {
+  flex: 1; background: rgba(255,255,255,0.1); border: none; color: #fff;
+  padding: 8px; border-radius: 6px;
+}
+/* === 统一 Type 表与 Data 表 行高 & 字体 === */
+#typeTable {
+  font-size: 15px; /* 与 Data 表一致 */
+}
+
+/* 让 Type 表格行高和 Data 表一致 */
+#typeTable th,
+#typeTable td {
+  padding: 10px 12px !important;  /* 同 data 表 */
+  line-height: 1.4;               /* 防止字体紧凑 */
+}
+
+
+/* 保留鼠标反馈，但不让点击行触发误操作 */
+#typeTable tbody tr {
+  cursor: default;
+}
+#typeTable tbody tr:hover {
+  background: rgba(0, 120, 255, 0.2);
+}
+:root{
+  --table-font-size: 15px;   /* 统一字体 */
+  --table-line-height: 1.6;  /* 统一行距 */
+  --table-vpad: 10px;        /* 统一上下内边距 */
+  --table-hpad: 12px;        /* 统一左右内边距 */
+}
+
+/* 两表统一行高规则 */
+#dataTable th, #dataTable td,
+#typeTable th, #typeTable td{
+  font-size: var(--table-font-size);
+  line-height: var(--table-line-height);
+  padding: var(--table-vpad) var(--table-hpad);
+}
+/* 覆盖原来写死的 14px */
+#typeTable{ font-size: var(--table-font-size); }
+/* 头部背景与阴影 */
+#typeTable thead{ background: rgba(0,80,160,0.8); }      /* 原来是 8 */
+.type-container:hover{ box-shadow: 0 0 16px rgba(0,120,255,0.4); } /* 原来是 4 */
+#typeTable th,#typeTable td{ border-bottom:1px solid rgba(255,255,255,0.1); } /* 原来是 1 */
+#typeTable tbody tr:hover{ background: rgba(0,120,255,0.2); }  /* 原来是 2 */
+/* 若“预览/修改”按钮导致行增高，限制按钮行高 */
+#dataTable .action-btn,
+#typeTable .action-btn{
+  line-height: 1;   /* 或设定 height: 28px; 并配合 padding 调整 */
+  padding: 4px 10px;
+}
+/* 弹窗两列布局 */
+.form-cols {
+  display: grid;
+  grid-template-columns: 1fr 1fr;   /* 左右两列 */
+  column-gap: 24px;
+  row-gap: 0;
+}
+
+.col-left .form-row,
+.col-right .form-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+/* 标签与输入框 */
+.form-row label {
+  width: 90px;
+  text-align: right;
+  color: #a8c4ff;
+  font-size: 14px;
+}
+.form-row input {
+  flex: 1;
+  background: rgba(255,255,255,0.1);
+  border: none;
+  color: #fff;
+  padding: 8px;
+  border-radius: 6px;
+}
+
+/* 仅放大“类型编辑”这个弹窗，不影响其他弹窗 */
+#typeModal .modal-content {
+  width: 940px;
+  max-width: 94vw;
+  max-height: 82vh;
+  overflow: auto;
+  padding: 32px 36px;
+}
+
+.type-modal-body {
+  display: grid;
+  grid-template-columns: minmax(360px, 1fr) minmax(360px, 1fr);
+  gap: 28px;
+  margin-top: 24px;
+}
+
+.type-pane {
+  background: linear-gradient(155deg, rgba(20, 32, 58, 0.82), rgba(10, 20, 42, 0.68));
+  border: 1px solid rgba(116, 166, 255, 0.3);
+  border-radius: 18px;
+  padding: 22px 24px;
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.type-pane-title {
+  margin-bottom: 8px;
+  font-size: 18px;
+  color: #f4f7ff;
+  font-weight: 600;
+}
+
+.type-pane-tip {
+  margin: 0 0 12px;
+  color: rgba(204, 220, 255, 0.8);
+  font-size: 14px;
+  line-height: 1.6;
+}
+
+.type-manual-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(200px, 1fr));
+  gap: 16px 28px;
+}
+.type-manual-col {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.type-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.type-field label {
+  color: #a8c4ff;
+  font-size: 14px;
+  letter-spacing: 0.2px;
+}
+.type-field input {
+  width: 100%;
+  max-width: 240px;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(130, 170, 255, 0.35);
+  background: rgba(255, 255, 255, 0.08);
+  color: #f2f6ff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.28);
+}
+.type-field input:focus {
+  outline: none;
+  background: rgba(44, 70, 120, 0.4);
+  border-color: rgba(90, 180, 255, 0.85);
+  box-shadow: 0 0 14px rgba(90, 160, 255, 0.5), inset 0 0 0 1px rgba(0, 0, 0, 0.25);
+}
+.type-field input::placeholder {
+  color: rgba(210, 224, 255, 0.6);
+}
+
+.type-bulk-upload {
+  width: 100%;
+  max-width: 100%;
+  border-color: rgba(255, 255, 255, 0.3);
+  background: rgba(12, 24, 48, 0.4);
+  padding: 24px;
+  box-sizing: border-box;
+}
+.type-bulk-upload:hover,
+.type-bulk-upload:focus {
+  outline: none;
+}
+.type-bulk-upload.dragover {
+  border-style: solid;
+  border-color: rgba(0, 150, 255, 0.7);
+  background: rgba(24, 60, 110, 0.55);
+}
+.type-bulk-status {
+  font-size: 13px;
+  color: rgba(204, 224, 255, 0.75);
+  text-align: center;
+}
+.type-bulk-status.error {
+  color: rgba(255, 172, 180, 0.92);
+}
+.type-bulk-status.success {
+  color: rgba(180, 244, 255, 0.9);
+}
+
+@media (max-width: 1100px) {
+  .type-modal-body {
+    grid-template-columns: 1fr;
+  }
+  .type-pane {
+    padding: 20px 22px;
+  }
+  .type-manual-grid {
+    gap: 16px 20px;
+  }
+  .type-field input {
+    max-width: 100%;
+  }
+}
+@media (max-width: 720px) {
+  #typeModal .modal-content {
+    width: 92vw;
+    padding: 24px 20px;
+  }
+  .type-manual-grid {
+    grid-template-columns: 1fr;
+  }
+  .type-manual-col {
+    gap: 14px;
+  }
+}

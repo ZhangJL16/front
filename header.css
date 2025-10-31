@@ -1,0 +1,142 @@
+/* 设置页面背景 */
+body {
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    background-image: url('images/u1.png');
+    background-size: contain; /* 保持背景图片的比例，避免覆盖 */
+    background-position: center;
+    color: white;
+    font-family: Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: center;
+    text-align: center;
+}
+/* 顶栏设置 */
+header {
+    width: 100%;
+    height: 80px;
+    background-image: url('images/u2.png');
+    background-size: contain;
+    background-repeat: no-repeat;
+    background-position: center center;
+    display: flex;                 /* 使文本可居中 */
+    align-items: center;           /* 垂直居中 */
+    justify-content: center;       /* 水平居中 */
+    position: relative; /* 允许右上角绝对定位 */
+}
+
+/* 顶栏文字 */
+.header-title {
+    font-family: "Microsoft YaHei", sans-serif; /* 微软雅黑 */
+    font-size: 30px;
+    color: white;
+    font-weight: bold;
+    position: relative;
+    top: -10px;
+}
+/* 用户信息框整体 */
+.user-box {
+    position: absolute;
+    right: 40px;
+    top: 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.08);
+    padding: 8px 14px;
+    border-radius: 10px;
+    backdrop-filter: blur(6px);
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    transition: background 0.3s ease;
+}
+.user-box:hover {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+/* 当前用户文字 */
+.user-role {
+    font-family: "Microsoft YaHei", sans-serif;
+    font-size: 15px;
+    color: #e0e0e0;
+    letter-spacing: 0.5px;
+}
+
+/* 用户管理按钮 */
+.user-manage-btn {
+    background: linear-gradient(135deg, #151938, #151938);
+    border: none;
+    color: #fff;
+    font-family: "Microsoft YaHei", sans-serif;
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+.user-manage-btn:hover {
+    background: linear-gradient(135deg, #123d67, #123d67);
+    transform: translateY(-1px);
+}
+
+/* 下拉菜单容器 */
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-content {
+    display: none;
+    position: absolute;
+    right: 0;
+    top: 40px;
+    background: rgba(15, 25, 45, 0.95);
+    border: 1px solid rgba(255,255,255,0.1);
+    min-width: 180px;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+    backdrop-filter: blur(8px);
+    overflow: hidden;
+    z-index: 1000;
+}
+.dropdown-content.show {
+    display: block;
+}
+
+/* 菜单文本与链接 */
+.dropdown-content p {
+    margin: 10px 12px;
+    color: #a5c8ff;
+    font-family: "Microsoft YaHei", sans-serif;
+    font-size: 14px;
+}
+
+.dropdown-content a {
+    display: block;
+    padding: 10px 14px;
+    color: #ffffff;
+    text-decoration: none;
+    font-family: "Microsoft YaHei", sans-serif;
+    font-size: 14px;
+    transition: background 0.3s ease;
+}
+.dropdown-content a:hover {
+    background: rgba(0, 120, 255, 0.6);
+}
+
+/* 让顶栏始终在最上层 */
+header { z-index: 5000; }
+
+/* 下拉菜单层级更高 */
+.user-box, .dropdown {z-index: 6000; }
+.dropdown-content { position: absolute; z-index: 7000; }
+
+/* 表格区域层级降低，仍保留悬停放大效果 */
+.data-section { position: relative; z-index: 1; }
+.table-container { position: relative; z-index: 1; }
+
+/* 可选：若仍被裁剪，去掉或放宽 overflow */
+.table-container { overflow: visible; }  /* 如需保留圆角裁剪，就不要改 */
